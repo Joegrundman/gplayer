@@ -89,7 +89,7 @@ const audioPlayerContainer = (data) => {
 const audioPlayer = (track) => (
     `<div class="audio-player">
             <h3 id="audio-player-track-title"> Now Playing: ${track.name} </h3>
-            <audio id="audio-player-console" src="${track.src}" controls>
+            <audio id="audio-player-console" src="${track.src}">
                 <p>Your browser does not support this audio player </p>
             </audio>
             <br>
