@@ -13,7 +13,7 @@
 //state object contains state of gplayer
 const state = {
     currentTrackId: 0,
-    currentVolume: 1
+    currentVolume: 0.5
 }
 
 // variable declarations
@@ -39,14 +39,15 @@ function bindNewEventHandlers () {
     aPlayer.removeEventListener("canplaythrough", setDuration)
     aPlayer.removeEventListener("ended", onEnded)
     timeline.removeEventListener("click", movePlayhead)
-    volume.removeEventListener("click", changeVolume)
+    volume.removeEventListener("click", handleChangeVolume)
 
     aPlayer.load()
     aPlayer.addEventListener("timeupdate", timeUpdate, false)
     aPlayer.addEventListener("canplaythrough", setDuration, false)
     aPlayer.addEventListener("ended", onEnded, false)
     timeline.addEventListener("click", handleMovePlayhead, false)
-    volume.addEventListener("click", changeVolume, false)
+    volume.addEventListener("click", handleChangeVolume, false)
+    
 }
 
 /**
@@ -82,7 +83,6 @@ const handleMovePlayhead = (event) => {
     aPlayer.currentTime = duration * ((event.pageX - timeline.offsetLeft) / timelineWidth)
 }
 
-
 const movePlayhead = e => {
     var newMargleft = e.pageX - timeline.offsetLeft
     if(newMargleft >= 0 && newMargleft <= timelineWidth){
@@ -94,8 +94,17 @@ const movePlayhead = e => {
     }
 }
 
-const changeVolume = () => {
+const handleChangeVolume = e => {
+    var newVol = (e.pageX - volume.offsetLeft) / volumeWidth
+    if (newVol < 0) { newVol = 0}
+    else if (newVol > 1) {newVol = 1}
+    state.currentVolume = newVol
+    setVolume()
+}
 
+const setVolume = () => {
+    aPlayer.volume = state.currentVolume
+    volumeHead.style.marginLeft = volumeWidth * aPlayer.volume + 'px'
 }
 
 /**
@@ -235,9 +244,8 @@ const initAudioPlayer = (data) => {
 window.onload = function() {
         playListSelectorAndBind(0)
         bindNewEventHandlers()
-        aPlayer.volume = state.currentVolume
         timelineWidth = timeline.offsetWidth - playhead.offsetWidth
         volumeWidth = volume.offsetWidth - volumeHead.offsetWidth
-
+        setVolume()
 }
 
