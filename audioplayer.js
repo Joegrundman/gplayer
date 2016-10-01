@@ -4,9 +4,16 @@
  * Could be useful to turn into a react component
  */
 
+/**
+ * ======================================
+ * Declarations, state and event bindings
+ * ======================================
+ */
+
 //state object contains state of gplayer
 const state = {
-    currentTrackId: 0
+    currentTrackId: 0,
+    currentVolume: 1
 }
 
 // variable declarations
@@ -16,26 +23,36 @@ var playhead
 var playListSelectorAndBind
 var timeline
 var timelineWidth 
+var volume
+var volumeWidth
+var volumeHead
 
-function bindNewAudioPlayer () {
+// remove and reassign eventhandlers on change of audioplayer
+function bindNewEventHandlers () {
     aPlayer = document.querySelector('#audio-player-console')
     playhead = document.querySelector('#audio-player-playhead')
     timeline = document.querySelector('#audio-player-timeline')
+    volume = document.querySelector('#audio-player-volume')
+    volumeHead = document.querySelector('#audio-player-volumehead')
 
     aPlayer.removeEventListener("timeupdate", timeUpdate)
     aPlayer.removeEventListener("canplaythrough", setDuration)
     aPlayer.removeEventListener("ended", onEnded)
     timeline.removeEventListener("click", movePlayhead)
+    volume.removeEventListener("click", changeVolume)
 
     aPlayer.load()
     aPlayer.addEventListener("timeupdate", timeUpdate, false)
     aPlayer.addEventListener("canplaythrough", setDuration, false)
     aPlayer.addEventListener("ended", onEnded, false)
     timeline.addEventListener("click", handleMovePlayhead, false)
+    volume.addEventListener("click", changeVolume, false)
 }
 
 /**
- * functions
+ * =======================
+ * event handler functions
+ * =======================S
  */
 
 const setClassAsPlaying = (index) => {
@@ -61,12 +78,13 @@ const onEnded = () => {
 
 const handleMovePlayhead = (event) => {
     movePlayhead(event)
-    aPlayer.currentTime = duration * (e => (e.pageX - timeline.offsetLeft) / timelineWidth)
+    //set audioplayer position to % of duration
+    aPlayer.currentTime = duration * ((event.pageX - timeline.offsetLeft) / timelineWidth)
 }
+
 
 const movePlayhead = e => {
     var newMargleft = e.pageX - timeline.offsetLeft
-    console.log('newMargleft', newMargleft)
     if(newMargleft >= 0 && newMargleft <= timelineWidth){
         playhead.style.marginLeft = newMargleft + 'px'
     } else if (newMargleft < 0) {
@@ -76,6 +94,16 @@ const movePlayhead = e => {
     }
 }
 
+const changeVolume = () => {
+
+}
+
+/**
+ * ===============
+ * Main functions
+ * ===============
+ */
+
 //function accepts playList as first argument and id for second creating a playlist specific selector
 const listSelectorAndBind = playList => id => {
     state.currentTrackId = id
@@ -83,7 +111,7 @@ const listSelectorAndBind = playList => id => {
     
     // attach new audio player, reattach event listeners and dom bindings
     document.querySelector('#audio-player-hook').innerHTML = audioPlayer(playList[state.currentTrackId])
-    bindNewAudioPlayer()
+    bindNewEventHandlers()
     return
 }
 
@@ -108,7 +136,9 @@ const backAudio = () => {
 }
 
 /**
- * rendered template components
+ * ============================
+ *     template components
+ * ============================
  */
 
 
@@ -127,13 +157,12 @@ const audioPlayerContainer = (data) => (`<div class="audio-player-container">
 
 
 // audio player and controls section
-const audioPlayer = (track) => (
-    `<div class="audio-player">
-            <p id="audio-player-track-title"> Now Playing: ${track.name} </p>
+const audioPlayer = (track) => (`
+        <div class="audio-player">
+            <p id="audio-player-track-title"> ${track.name} </p>
             <audio id="audio-player-console" src="${track.src}" autoplay>
                 <p>Your browser does not support this audio player </p>
             </audio>
-            <br>
             <button id="audio-player-backward-button" 
                 class="audio-player-main-button" 
                 onclick="backAudio()">
@@ -155,11 +184,14 @@ const audioPlayer = (track) => (
                 <i class="ion-skip-forward"></i>
             </button>
             <br>
-            <div id="audio-player-timeline-container">
+            <div id="audio-player-timeline-and-volume-container">
                 <div id="audio-player-timeline">
                     <div id="audio-player-playhead"></div>
-                    <span id="audio-player-duration"></span>
                 </div>
+                <i class="ion-volume-medium"></i>
+                <div id="audio-player-volume">
+                    <div id="audio-player-volumehead"></div>
+                </div> 
             </div>
         </div>`)
 
@@ -185,6 +217,12 @@ const playList = (playList) => (`
             </div>`)).join('')}
     </div>`)
 
+/**
+ * ====================================
+ *      initialise and launch app
+ * ===================================
+ */
+
 // return the completed audioplayer component   
 const initAudioPlayer = (data) => {
     // create playListSelector by passing in the playList to listSelector
@@ -196,7 +234,10 @@ const initAudioPlayer = (data) => {
 // initialise the audio player and set track 0 to active
 window.onload = function() {
         playListSelectorAndBind(0)
-        bindNewAudioPlayer()
+        bindNewEventHandlers()
+        aPlayer.volume = state.currentVolume
         timelineWidth = timeline.offsetWidth - playhead.offsetWidth
+        volumeWidth = volume.offsetWidth - volumeHead.offsetWidth
+
 }
 
