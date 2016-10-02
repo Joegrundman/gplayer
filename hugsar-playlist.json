@@ -2,9 +2,9 @@
     "data": {
         "name": "hugsar",
         "albumName": "Cake",
-        "webUrl": "hugsar.uk",
+        "webUrl": "http://hugsar.uk",
         "musicians": ["Tom Grundman", "Jo Case", "Matt Green", "Bean"],
-        "snippet": "Bristol-based band weaves proggy grooves and psychedelic waves into a unique sound",
+        "snippet": "Bristol-based band weaves proggy grooves and psychedelic waves into a unique sound"
     },
     "playList": [
         {
