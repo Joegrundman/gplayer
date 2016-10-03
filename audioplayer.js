@@ -46,6 +46,7 @@ $(document).ready(() => {
         } else if (state.shuffle) {
             if (state.shufflePlayList.length) {
                 playlistSelector(state.shufflePlayList.pop())
+                state.shufflePlayList.push(state.currentTrackId)
                 play()
             }
         }
@@ -136,6 +137,7 @@ $(document).ready(() => {
     }
 
     const skipBackward = () => {
+        if(state.shuffle) { return }
         if (state.currentTrackId == 0 || (aPlayer.currentTime / duration > 0.02)) {
             playlistSelector(state.currentTrackId)
             play()
@@ -146,7 +148,14 @@ $(document).ready(() => {
     }
 
     const skipForward = () => {
-        if (state.currentTrackId < playlist.length - 1) {
+        if(state.shuffle) {
+            if (state.shufflePlayList.length) {
+                playlistSelector(state.shufflePlayList.pop())
+                play()                
+            } else {
+                return
+            }
+        } else if (state.currentTrackId < playlist.length - 1) {
             playlistSelector(state.currentTrackId + 1)
             play()
         }

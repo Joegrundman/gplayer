@@ -51,6 +51,9 @@ On top of the requirements this audio player also implements:
    and in addition had difficult issues with CORS and AWS, which hosts the mp3s
   This was not completable within the available timeframe and had to be left out.
 
+
+  **go back on shuffle** also not implemented yet
+
   Tested in *Chrome* only
 
 ## music
