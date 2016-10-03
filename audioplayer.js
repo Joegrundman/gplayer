@@ -1,361 +1,229 @@
-/**
- * Obviously this is not the only way to do it, but i decided for a small app to forego
- * jquery or angular and stick to native js templating. 
- * Could be useful to turn into a react component
- */
+$(document).ready(() => {
 
-/**
- * ======================================
- * Declarations, state and event bindings
- * ======================================
- */
+    var aPlayer, artistData, audioCtx, duration, playhead, playlist, playlistSelector, timeline, timelineWidth
+    var volume, volumeWidth, volumeHead
+    var musicBuffer = {}
 
-//state object contains state of gplayer
-const state = {
-    currentTrackId: 0,
-    currentVolume: 0.7
-}
+    var state = {
+        currentTrackId: 0,
+        currentVolume: 0.7,
+        playall: true,
+        shuffle: false,
+        loop: false,
+        shufflePlayList: []
+    }
 
-// variable declarations
-var aPlayer
-var audioCtx
-var audioBuffer
-var canvasCtx
-const canvasHeight = 200
-const canvasWidth = 300
-var duration
-var playhead
-var soundtrack
-var playListSelectorAndBind
-var timeline
-var timelineWidth 
-var visualizerCanvas
-var volume
-var volumeWidth
-var volumeHead
+    const bindControls = () => {
+        $('#audio-player-pause').on('click', pause)
+        $('#audio-player-play').on('click', play)
+        $('#audio-player-skip-forward').on('click', skipForward)
+        $('#audio-player-skip-backward').on('click', skipBackward)
+        $('#audio-player-console').on('ended', handleEndTrack)
+        $('#audio-player-console').on("timeupdate", timeUpdate)
+        $('#audio-player-console').on("canplaythrough", setDuration)
+        $('#audio-player-volume').on("click", handleChangeVolume)
+        $('#audio-player-timeline').on("click", handleMovePlayhead)
+        $('#playall-switch').change(togglePlayall)
+        $('#loop-switch').change(toggleLoop)
+        $('#shuffle-switch').change(toggleShuffle)
+    }
 
-// remove and reassign eventhandlers on change of audioplayer
-function bindNewEventHandlers () {
-    aPlayer = document.querySelector('#audio-player-console')
-    // aPlayer.crossOrigin = 'anonymous'
-    playhead = document.querySelector('#audio-player-playhead')
-    timeline = document.querySelector('#audio-player-timeline')
-    visualizerCanvas = document.querySelector('#audio-player-visualizer')
-    volume = document.querySelector('#audio-player-volume')
-    volumeHead = document.querySelector('#audio-player-volumehead')
 
-    aPlayer.removeEventListener("timeupdate", timeUpdate)
-    aPlayer.removeEventListener("canplaythrough", setDuration)
-    aPlayer.removeEventListener("ended", onEnded)
-    timeline.removeEventListener("click", movePlayhead)
-    volume.removeEventListener("click", handleChangeVolume)
+    const handleChangeVolume = e => {
+        var newVol = (e.pageX - volume.offsetLeft) / volumeWidth
+        if (newVol < 0) { newVol = 0 }
+        else if (newVol > 1) { newVol = 1 }
+        state.currentVolume = newVol
+        setVolume()
+    }
 
-    aPlayer.load()
-    aPlayer.addEventListener("timeupdate", timeUpdate, false)
-    aPlayer.addEventListener("canplaythrough", setDuration, false)
-    aPlayer.addEventListener("ended", onEnded, false)
-    timeline.addEventListener("click", handleMovePlayhead, false)
-    volume.addEventListener("click", handleChangeVolume, false)
+    const handleEndTrack = () => {
+        if (state.loop) {
+            playlistSelector(state.currentTrackId)
+            play()
+        } else if (state.playall) {
+            skipForward()
+        } else if (state.shuffle) {
+            if (state.shufflePlayList.length) {
+                playlistSelector(state.shufflePlayList.pop())
+                play()
+            }
+        }
+    }
+
+    const handleMovePlayhead = (event) => {
+        movePlayhead(event)
+        aPlayer.currentTime = duration * ((event.pageX - timeline.offsetLeft) / timelineWidth)
+    }
+
+    const listSelector = (playlist) => (id) => {
+        state.currentTrackId = id
+        setClassAsPlaying()
+        setCurrentTrack(playlist[id])
+        return
+    }
+
+    const movePlayhead = e => {
+        var newWidth = e.pageX - timeline.offsetLeft
+        if (newWidth >= 0 && newWidth <= timelineWidth) {
+            playhead.style.width = newWidth + 'px'
+        } else if (newWidth < 0) {
+            playhead.style.width = '0px'
+        } else if (newWidth > timelineWidth) {
+            playhead.style.width = timelineWidth + "px"
+        }
+    }
+
+    const play = () => {
+        aPlayer.play()
+    }
+
+    const pause = () => {
+        document.querySelector('#audio-player-console').pause()
+    }
     
-}
+    const setClassAsPlaying = () => {
+        var index = state.currentTrackId
 
-/**
- * =======================
- * event handler functions
- * =======================S
- */
-
-const setClassAsPlaying = (index) => {
-    var playListCells = document.querySelectorAll('.audio-player-playlist-cell')
-    playListCells.forEach(cell => {
-        cell.classList.remove("playing")
-    })
-    var node = document.querySelector(`#playlist-cell-${index}`)
-    node.classList.add("playing")
-}
-
-const setDuration = () => duration = aPlayer.duration
-
-const timeUpdate = () => {
-    var playPercent = timelineWidth * (aPlayer.currentTime / duration)
-    playhead.style.width = playPercent + 'px'
-    // playhead.style.marginLeft = playPercent + 'px'
-}
-
-const onEnded = () => {
-    state.currentTrackId ++
-    playListSelectorAndBind(state.currentTrackId)
-}
-
-const handleMovePlayhead = (event) => {
-    movePlayhead(event)
-    aPlayer.currentTime = duration * ((event.pageX - timeline.offsetLeft) / timelineWidth)
-}
-
-const movePlayhead = e => {
-    var newWidth = e.pageX - timeline.offsetLeft
-    if(newWidth >= 0 && newWidth <= timelineWidth){
-        playhead.style.width = newWidth + 'px'
-    } else if (newWidth < 0) {
-        playhead.style.width = '0px'
-    } else if (newWidth > timelineWidth) {
-        playhead.style.width = timelineWidth + "px"
+        $('.audio-player-playlist-cell').each((i, cell) => {
+            $(cell).removeClass("playing")
+        })
+        $('#playlist-cell-' + index).addClass("playing")
     }
-}
 
-const handleChangeVolume = e => {
-    var newVol = (e.pageX - volume.offsetLeft) / volumeWidth
-    if (newVol < 0) { newVol = 0}
-    else if (newVol > 1) {newVol = 1}
-    state.currentVolume = newVol
-    setVolume()
-}
-
-const setVolume = () => {
-    aPlayer.volume = state.currentVolume
-    volumeHead.style.width = volumeWidth * aPlayer.volume + 'px'
-}
-
-/**
- * ===============
- * Main functions
- * ===============
- */
-
-//function accepts playList as first argument and id for second creating a playlist specific selector
-const listSelectorAndBind = playList => id => {
-    state.currentTrackId = id
-
-    setClassAsPlaying(id)
-    // getSoundTrack(playList[id].src, () => {
-        
-    // } )
-    // attach new audio player, reattach event listeners and dom bindings
-    document.querySelector('#audio-player-hook').innerHTML = audioPlayer(playList[state.currentTrackId])
-    bindNewEventHandlers()
-    setVolume()
-    return
-}
-
-const play = () => {
-    aPlayer.play()       
-}
-
-const playAudioUsingBuffer = () => {
-    var src = audioCtx.createBufferSource()
-    src.buffer = buf
-    src.connect(audioCtx.destination)
-    src.noteOn(0)
-}
-
-const pause = () => {
-    aPlayer.pause()  
-}
-
-const skipForward = () => {
-    playListSelectorAndBind(state.currentTrackId + 1)
-}
-
-const skipBackward = () => {
-    if(state.currentTrackId == 0 || (aPlayer.currentTime / duration > 0.02)) {
-        playListSelectorAndBind(state.currentTrackId)       
-    } else {
-    playListSelectorAndBind(state.currentTrackId -1)
+    const setCurrentTrack = (track) => {
+        $('#audio-player-track-title').text(track.name)
+        $('#audio-player-console').attr('src', track.src)
     }
-}
 
-/**
- * ============================
- *    component templates
- * ============================
- */
+    const setDuration = () => duration = aPlayer.duration
 
-
-// main container for the audio player component
-const audioPlayerContainer = (data) => (`
-    <div class="audio-player-container">
-        ${audioPlayerTitle(data.data)}
-        <div class="audio-player-playList-and-player-container">
-            ${playListContainer(data.playList)}
-            <br>
-            <br>
-            <div id="audio-player-hook"></div>
-        </div>
-     </div>`)
-
-// // audio player and controls component
-// const audioPlayer = (track) => (`
-//         <div class="audio-player">
-//             <p id="audio-player-track-title"> ${track.name} </p>
-//             <audio id="audio-player-console" autoplay>
-//                 <p>Your browser does not support this audio player </p>
-//             </audio>
-//             <button id="audio-player-skip-backward" 
-//                 class="audio-player-main-button" 
-//                 onclick="skipBackward()">
-//                 <i class="ion-skip-backward"></i>
-//             </button>
-//             <button id="audio-player-play" 
-//                 class="audio-player-main-button" 
-//                 onclick="play()">
-//                 <i class="ion-play"></i>
-//             </button>
-//             <button id="audio-player-pause" 
-//                 class="audio-player-main-button" 
-//                 onclick="pause()">
-//                 <i class="ion-pause"></i>
-//             </button>
-//             <button id="audio-playerskip-forward" 
-//                 class="audio-player-main-button" 
-//                 onclick="skipForward()">
-//                 <i class="ion-skip-forward"></i>
-//             </button>
-//             <br>
-//             <div id="audio-player-timeline-and-volume-container">
-//                 <div id="audio-player-timeline">
-//                     <div id="audio-player-playhead"></div>
-//                 </div>
-//                 <i class="ion-volume-medium"></i>
-//                 <div id="audio-player-volume">
-//                     <div id="audio-player-volumehead"></div>
-//                 </div> 
-//             </div>
-//             <div id="audio-player-visualizer-container">
-//                 <canvas id="audio-player-visualizer" height="${canvasHeight}px" width="${canvasWidth}px" style="border:1px solid #000000"></canvas>
-//             </div>
-//         </div>`)
-
-
-
-// audio player and controls section
-const audioPlayer = (track) => (`
-        <div class="audio-player">
-            <p id="audio-player-track-title"> ${track.name} </p>
-            <audio id="audio-player-console" src="${track.src}" autoplay>
-                <p>Your browser does not support this audio player </p>
-            </audio>
-            <button id="audio-player-skip-backward" 
-                class="audio-player-main-button" 
-                onclick="skipBackward()">
-                <i class="ion-skip-backward"></i>
-            </button>
-            <button id="audio-player-play" 
-                class="audio-player-main-button" 
-                onclick="play()">
-                <i class="ion-play"></i>
-            </button>
-            <button id="audio-player-pause" 
-                class="audio-player-main-button" 
-                onclick="pause()">
-                <i class="ion-pause"></i>
-            </button>
-            <button id="audio-playerskip-forward" 
-                class="audio-player-main-button" 
-                onclick="skipForward()">
-                <i class="ion-skip-forward"></i>
-            </button>
-            <br>
-            <div id="audio-player-timeline-and-volume-container">
-                <div id="audio-player-timeline">
-                    <div id="audio-player-playhead"></div>
-                </div>
-                <i class="ion-volume-medium"></i>
-                <div id="audio-player-volume">
-                    <div id="audio-player-volumehead"></div>
-                </div> 
-            </div>
-            <div id="audio-player-visualizer-container">
-                <canvas id="audio-player-visualizer" height="${canvasHeight}px" width="${canvasWidth}px" style="border:1px solid #000000"></canvas>
-            </div>
-        </div>`)
-
-
-// title and album name header
-const audioPlayerTitle = (titleData) => (`
-    <div class="audio-player-title">
-        <span id="logo">gplayer</span>   
-        <a href="${titleData.webUrl}" target="_blank">
-            <span id="name-and-album">${titleData.name} - ${titleData.albumName}</span>
-        </a>
-    </div>`)
-
-
-
-// draw playlist with onclick callback
-const playListContainer = (playList) => (`
-    <div class="audio-player-playlist-container">
-        ${playList.map((track, i, playListArr) => (`
+    const setPlaylist = (playlist) => {
+        var playlistHtml = playlist.map((track, i) => (`
             <div class="audio-player-playlist-cell"
-                id="playlist-cell-${i}"" 
-                onclick="playListSelectorAndBind(${i})">
-            <p> Track: ${i + 1} - ${track.name}</p>
-            </div>`)).join('')}
-    </div>`)
+                id="playlist-cell-${i}" >
+                <p> Track: ${i + 1} - ${track.name}</p>
+            </div>`)).join('')
 
-/**
- * ====================================
- *      initialise and launch app
- * ===================================
- */
+        $('.audio-player-playlist-container').html(playlistHtml)
 
-// return the completed audioplayer component   
-const initAudioPlayer = (data) => {
-    // create playListSelector by passing in the playList to listSelector
-    playListSelectorAndBind = listSelectorAndBind(data.playList)
-    return audioPlayerContainer(data)
-}
+        playlist.forEach((track, i) => {
+            $(`#playlist-cell-${i}`).on("click", (e) => playlistSelector(i))
+        })
+    }
 
-// initialize visualizer
-const initVisualizer = () => {
-    canvasCtx = visualizerCanvas.getContext("2d")
-    audioCtx =  new (window.AudioContext  || window.webkitAudioContext)()
-    var audioSrc = audioCtx.createMediaElementSource(aPlayer)
-    var analyser = audioCtx.createAnalyser()
-    audioSrc.connect(analyser)
-    analyser.fftSize = 2048
-    var bufferLength = analyser.frequencyBinCount
-    var dataArray = new Uint8Array(bufferLength)
-    analyser.getByteTimeDomainData(dataArray)
 
-    const drawVisualizer = () => {
-        var drawVisual = requestAnimationFrame(drawVisualizer)
-        analyser.getByteTimeDomainData(dataArray)
+    const setTitle = (titleData) => {
+        var titleStr = titleData.name + " - " + titleData.albumName
+        $('#name-and-album').html(titleStr)
+        $('#link-to-website').attr('href', titleData.webUrl)
+    }
 
-        canvasCtx.fillStyle = 'rgb(200, 200, 200)'
-        canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight)
+    const shuffle = (array) => {
+        var currentIndex = array.length, temporaryValue, randomIndex;
 
-        canvasCtx.lineWidth = 2
-        canvasCtx.strokeStyle = 'rgb(0, 0, 0)'
+        while (0 !== currentIndex) {
 
-        canvasCtx.beginPath()
-        var sliceWidth = canvasWidth * 1.0 / bufferLength
-        var x = 0
-        for (var i = 0; i < bufferLength; i++) {
-            var v = dataArray[i] / 128.0
-            var y = v * canvasHeight/2
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
 
-            if(i === 0) {
-                canvasCtx.moveTo(x, y)
-            } else {
-                canvasCtx.lineTo(x, y)
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
+    }
+
+    const skipBackward = () => {
+        if (state.currentTrackId == 0 || (aPlayer.currentTime / duration > 0.02)) {
+            playlistSelector(state.currentTrackId)
+            play()
+        } else {
+            playlistSelector(state.currentTrackId - 1)
+            play()
+        }
+    }
+
+    const skipForward = () => {
+        if (state.currentTrackId < playlist.length - 1) {
+            playlistSelector(state.currentTrackId + 1)
+            play()
+        }
+    }
+
+    const timeUpdate = () => {
+        var playPercent = timelineWidth * (aPlayer.currentTime / duration)
+        playhead.style.width = playPercent + 'px'
+    }
+
+
+    const setVolume = () => {
+        aPlayer.volume = state.currentVolume
+        volumeHead.style.width = volumeWidth * aPlayer.volume + 'px'
+    }
+
+    const togglePlayall = () => {
+        state.playall = !state.playall
+        if(state.playall) {
+            state.loop = false
+            state.shuffle = false
+            $('#loop-switch').prop('checked', false)
+            $('#shuffle-switch').prop('checked', false)
+            state.currentTrackId = 0
+            playlistSelector(0)
+            play()
+        }
+    }
+
+    const toggleShuffle = () => {
+        state.shuffle = !state.shuffle
+        if(state.shuffle) {
+            state.loop = false
+            state.playall = false
+            $('#loop-switch').prop('checked', false)
+            $('#playall-switch').prop('checked', false)
+
+            var newPlayList = []
+            for(var i = 0; i < playlist.length; i++) {
+                newPlayList.push(i)
             }
 
-            x += sliceWidth
+            state.shufflePlayList = shuffle(newPlayList)
+            playlistSelector(state.shufflePlayList.pop())
+            play()
+
         }
-        canvasCtx.lineTo(visualizerCanvas.width, visualizerCanvas.height / 2)
-        canvasCtx.stroke()
     }
-    drawVisualizer()    
-}
 
+    const toggleLoop = () => {
+        state.loop = !state.loop
+        if(state.loop) {
+            state.playall = false
+            state.shuffle = false
+            $('#playall-switch').prop('checked', false)
+            $('#shuffle-switch').prop('checked', false)
+        }
+    }
 
-// initialise the audio player and set track 0 to active
-window.onload = function() {
-        playListSelectorAndBind(0)
-        bindNewEventHandlers()
-        timelineWidth = timeline.offsetWidth - playhead.offsetWidth
+    const initAudioPlayer = () => {
+        aPlayer = document.querySelector('#audio-player-console')
+        playhead = document.querySelector('#audio-player-playhead')
+        timeline = document.querySelector('#audio-player-timeline')
+        volume = document.querySelector('#audio-player-volume')
+        volumeHead = document.querySelector('#audio-player-volumehead')
         volumeWidth = volume.offsetWidth - volumeHead.offsetWidth
         setVolume()
-        initVisualizer()
-}
+        timelineWidth = timeline.offsetWidth - playhead.offsetWidth
+        bindControls()
+        playlist = musicData.playList
+        artistData = musicData.data
+        playlistSelector = listSelector(playlist)
+        setTitle(artistData)
+        setPlaylist(playlist)
+        playlistSelector(state.currentTrackId)
+    }
 
+    initAudioPlayer()
+
+})

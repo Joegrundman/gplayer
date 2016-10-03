@@ -2,6 +2,8 @@
 
 This is a skin for **html5 audio player** to meet a challenge requirement.  
 
+This is tested in *Chrome* only
+
 The challenge requires a skin for either html5 audio player or jquery jplayer  
 
 The audio player must take a playlist and allow selection of tracks for the player
@@ -21,21 +23,18 @@ Obviously it is trivial to implement mixed-artist playlists.
 
 Also, it is trivial to implement getting the data as json from a server. 
 
-The musicData is therefore not hardcoded. Any musicData can be passed in through index.js so long as it   
-matches the shape of the hugsar sample. it will be merged into the playlistSelectorAndBind function.
+The musicData is therefore not hardcoded. Any musicData can be passed in or fetched as JSON from a server so long as it   
+matches the shape of the hugsar sample. it will be merged into the playlistSelector function.
+
+
 
 
 ## externals
-Ionicons is the only external library in this app.  
+jquery
 http://ionicons.com/
+onoffswitch modified from https://proto.io/freebies/onoff/
 
 ## app design
-
-I chose to base this app on javascript template strings and innerHTML rather than createElement.
-I find createElement is harder to reason about and write.
-template strings may have a slight performance hit, but it seems fast enough to me, and angular2 is based on it, so how slow can it be?
-Most important difference as compared to createElement is to reattach eventHandlers
-after updates as the DOM cannot track them through template strings. Event reattachment is all handled in a single function.
 
 On top of the requirements this audio player also implements:
 
@@ -43,12 +42,20 @@ On top of the requirements this audio player also implements:
   skip back, 
   autoplay next track on end, 
   shuffle, 
-  volume contro,
-  sound visualizer
+  volume control,
+  loop
+
+## not in app
+  visualizer. I planned to have a simple barchart visualizer but getting a visualizer to work required much 
+  deeper interaction with the audioContext object than i had previously experienced,
+   and in addition had difficult issues with CORS and AWS, which hosts the mp3s
+  This was not completable within the available timeframe and had to be left out.
+
+  Tested in *Chrome* only
 
 ## music
 
-Music by **hugsar**
+Sample music playlist by **hugsar**
 
-www.hugsar.uk
+http://www.hugsar.uk
 

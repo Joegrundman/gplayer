@@ -1,16 +1,96 @@
 <!doctype html>
 <html>
+
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">       
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="audioplayer.css" >
+    <link rel="stylesheet" type="text/css" href="audioplayer.css">
+    <link rel="stylesheet" type="text/css" href="onoffswitch.css">
 </head>
+
 <body>
-    <div id="audio-player-root"></div>
+    <div id="audio-player-root">
+        <div class="audio-player-container">
+            <div class="audio-player-title">
+                <span id="logo">gplayer</span>
+                <a id="link-to-website" href="" target="_blank">
+                    <span id="name-and-album"></span>
+                </a>
+            </div>
+            <div class="audio-player-playList-and-player-container">
+                <div class="audio-player-playlist-container">
+               <!--playlist container goes here-->
+                </div>`
+ 
+                <br>
+                <br>
+                <div id="audio-player-hook">
+                    <div class="audio-player">
+                        <p id="audio-player-track-title"></p>
+                        <audio id="audio-player-console" src="">
+                            <p>Your browser does not support this audio player </p>
+                        </audio>
+                        <button id="audio-player-skip-backward" 
+                            class="audio-player-main-button" >
+                            <i class="ion-skip-backward"></i>
+                        </button>
+                        <button id="audio-player-play" 
+                            class="audio-player-main-button" >
+                            <i class="ion-play"></i>
+                        </button>
+                        <button id="audio-player-pause" 
+                            class="audio-player-main-button" >
+                            <i class="ion-pause"></i>
+                        </button>
+                        <button id="audio-player-skip-forward" 
+                            class="audio-player-main-button">
+                            <i class="ion-skip-forward"></i>
+                        </button>
+                        <br>
+                        <div id="audio-player-timeline-and-volume-container">
+                            <div id="audio-player-timeline">
+                                <div id="audio-player-playhead"></div>
+                            </div>
+                            <i class="ion-volume-medium"></i>
+                            <div id="audio-player-volume">
+                                <div id="audio-player-volumehead"></div>
+                            </div>
+                        </div>
+                        <div id="audio-player-switches">
+                            <div class="audio-player-switch-container">
+                                <div class="onoffswitch">
+                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="playall-switch" checked>
+                                    <label class="onoffswitch-label" for="playall-switch"></label>
+                                </div>
+                                <span class="switch-label">Play All</span>
+                            </div>
+                            <div class="audio-player-switch-container">
+                                <div class="onoffswitch">
+                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="shuffle-switch">
+                                    <label class="onoffswitch-label" for="shuffle-switch"></label>
+                                </div>
+                                <span class="switch-label">Shuffle</span>
+                            </div>
+                            <div class="audio-player-switch-container">
+                                <div class="onoffswitch">
+                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loop-switch">
+                                    <label class="onoffswitch-label" for="loop-switch"></label>
+                                </div>
+                                <span class="switch-label">Repeat Track</span>
+                            </div>
+                        <div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" 
+        integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" 
+        crossorigin="anonymous"></script>
     <script src="musicdata.js"></script>
     <script src="audioplayer.js"></script>
-    <script src="index.js"></script>
 </body>
+
 </html>
