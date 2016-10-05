@@ -56,6 +56,8 @@ On top of the requirements this audio player also implements:
 
   Tested in *Chrome* only
 
+  Not responsive! Tested only on laptop and with chrome due to time constraints
+
 ## music
 
 Sample music playlist by **hugsar**
